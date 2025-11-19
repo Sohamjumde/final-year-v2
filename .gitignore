@@ -1,3 +1,2 @@
-
-# ignore virtual env
-venv/
+venv/Lib/site-packages/_polars_runtime_32/_polars_runtime_32.pyd
+venv/Lib/site-packages/torch/lib/torch_cpu.dll
