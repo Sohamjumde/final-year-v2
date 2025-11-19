@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Dog Detector</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        font-family: system-ui, sans-serif;
+        background: #0f172a;
+        color: #e5e7eb;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 12px;
+      }
+      .container {
+        padding: 16px;
+        width: 100%;
+        max-width: 480px;
+      }
+      .card {
+        background: #111827;
+        border-radius: 12px;
+        padding: 16px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+      }
+      #preview {
+        width: 100%;
+        border-radius: 12px;
+      }
+      button {
+        margin-top: 12px;
+        width: 100%;
+        padding: 12px;
+        border-radius: 9999px;
+        border: none;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        background: #22c55e;
+        color: #022c22;
+      }
+      button:disabled {
+        background: #4b5563;
+        cursor: default;
+      }
+      #status {
+        margin-top: 8px;
+        font-size: 14px;
+        opacity: 0.8;
+      }
+      #results {
+        margin-top: 12px;
+        font-size: 14px;
+        white-space: pre-wrap;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h2>Dog Detector</h2>
+      <p>Take a photo and detect dogs using your phone.</p>
+
+      <div class="card">
+        <input
+          id="fileInput"
+          type="file"
+          accept="image/*;capture=camera"
+          style="margin-bottom: 12px; width: 100%"
+        />
+        <img id="preview" alt="Preview" />
+        <button id="detectBtn" disabled>Detect Dogs</button>
+        <div id="status"></div>
+        <div id="results"></div>
+      </div>
+    </div>
+
+    <script>
+      // CHANGE THIS to your backend URL (local or deployed)
+      const API_URL = "http://localhost:8000/detect";
+
+      const fileInput = document.getElementById("fileInput");
+      const preview = document.getElementById("preview");
+      const detectBtn = document.getElementById("detectBtn");
+      const statusEl = document.getElementById("status");
+      const resultsEl = document.getElementById("results");
+
+      let selectedFile = null;
+
+      fileInput.addEventListener("change", (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        selectedFile = file;
+        const url = URL.createObjectURL(file);
+        preview.src = url;
+        detectBtn.disabled = false;
+        statusEl.textContent = "";
+        resultsEl.textContent = "";
+      });
+
+      detectBtn.addEventListener("click", async () => {
+        if (!selectedFile) return;
+
+        detectBtn.disabled = true;
+        statusEl.textContent = "Detecting...";
+        resultsEl.textContent = "";
+
+        const formData = new FormData();
+        formData.append("file", selectedFile);
+
+        try {
+          const res = await fetch(API_URL, {
+            method: "POST",
+            body: formData,
+          });
+
+          if (!res.ok) {
+            throw new Error("API error: " + res.status);
+          }
+
+          const data = await res.json();
+          const detections = data.detections || [];
+
+          if (detections.length === 0) {
+            resultsEl.textContent = "No dogs detected.";
+          } else {
+            resultsEl.textContent =
+              "Detected dogs:\n" +
+              detections
+                .map(
+                  (d, i) =>
+                    `#${i + 1} conf=${d.confidence.toFixed(2)} bbox=${d.bbox
+                      .map((v) => v.toFixed(1))
+                      .join(", ")}`
+                )
+                .join("\n");
+          }
+        } catch (err) {
+          console.error(err);
+          resultsEl.textContent = "Error: " + err.message;
+        } finally {
+          detectBtn.disabled = false;
+          statusEl.textContent = "";
+        }
+      });
+    </script>
+  </body>
+</html>
