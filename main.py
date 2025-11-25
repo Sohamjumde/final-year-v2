@@ -19,7 +19,7 @@ SNAPSHOT_DIR = "outputs/snapshots"
 MODEL_PATH = "yolov8n.pt"
 
 # Base IP/host shown in your screenshot
-CAMERA_HOST = "192.168.1.4:8080"
+CAMERA_HOST = "192.168.137.33:8080"
 
 # Try a list of likely endpoints for the phone IP Webcam app.
 CAMERA_ENDPOINTS = [
